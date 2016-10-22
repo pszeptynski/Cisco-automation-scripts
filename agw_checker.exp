@@ -1,0 +1,99 @@
+# Go through a list of Cisco devices and send some commands.
+# Telnet version
+# v 0.3, 28.02.2014 PSV
+#
+# Requirements:
+# 1. Create a file called "devices.txt" (or change the name below) with a list of your devices (one per line).
+# 2. Set your login/password/enable variables below.
+# Output:
+# Parse you results from "results.txt" (or change the name below).
+
+
+ package require Expect
+
+# Set variables
+ set username USERNAME
+ set password PASSWORD
+ set enablepassword ENA_PASSWORD
+ set device_list "devices.txt"
+ set results_file "results.txt"
+ set logfile = "output.log"
+
+# Tune timeout value if have connection problems/timeouts
+ set timeout 15
+ set send_slow {1 .01}
+
+# Turn off screen logging = 0
+# log_user 0
+
+# Log output
+# log_file -a $logfile # -a is for append
+ log_file $logfile
+
+# Log results - create or truncate a file
+# more i/o in main loop
+ set results [open $results_file w]
+
+# Read devices' hostnames/IP addresses from file
+ set file_channel  [open $device_list r]
+ set devices       [read $file_channel]
+ close $file_channel
+
+ set device_entries  [split $devices "\n"]
+
+
+# Main loop
+ foreach device $device_entries {
+     if {[string length $device] == 0 || [regexp {[ \t]*#} $device]} { continue }
+     set hostname [lindex $device 0]
+
+# Show which device we are working on and at what time
+ set results [open $results_file a+]
+ set date [clock format [clock seconds] -format {%Y-%b-%d %H:%M:%S}]
+ send_user "\n"
+ send_user ">>>>>  Working on $hostname  \[$date\] <<<<<\n"
+ puts $results "\n >>>>>  Working on $hostname  \[$date\] <<<<<\n"
+ send_user "\n"
+
+# Spawn telnet session to target device
+ spawn telnet $hostname
+
+
+# Handle connection issues or log in
+ expect {
+         timeout { send_user "\nTimeout Exceeded - Check Host\n"; puts $results "\n ** Connection to ($hostname) failed! Timeout! **\n"; close $results; continue }
+         eof     { send_user "\nConnection To $hostname Failed\n"; puts $results "\n ** Connection to ($hostname) failed! **\n"; close $results; continue }
+         "*#"    {}
+         "Username:" { send "$username\r"; expect "*assword:"; send "$password\r"}
+ }
+
+# If we're not already in enable mode, get us there
+ expect {
+         default { send_user "\nEnable Mode Failed - Check Password\n"; puts $results "\n ** Enable mode on ($hostname) failed! Check password! **\n"; continue }
+         "*#"    {}
+         "*>"    {
+                    send "enable\r"
+                    expect "*assword"
+                    send "$enablepassword\r"
+                    expect -re {([^\s]*)#} {
+                    # the complete re is in :
+                    # puts out0:$expect_out(0,string)
+                    # the subexpression () is in:
+                    set hostshort $expect_out(1,string)
+                    }
+         }
+ }
+
+# List of commands that are send to the device.
+# Originally this project was done to check if there no login issues with hundreds of devices in customer's network.
+# It tries to log in to the device, enter enable mode, send "sh clock" command and logout. Tune to your needs.
+
+ send "sh clock\r"
+ expect "*#"
+ send "quit \r"
+ send_user "\n\n ##### Telnet on $hostshort ($hostname) works OK! #####\n\n"
+ puts $results "\n ##### Telnet on $hostshort ($hostname) works OK! #####\n"
+ close $results
+ }
+
+ exit
