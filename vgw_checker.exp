@@ -18,7 +18,7 @@
  set enablepassword ENA_PASSWORD
  set device_list "devices.txt"
  set results_file "results.txt"
- set logfile = "output.log"
+ set logfile "output.log"
 
 # Tune timeout value if have connection problems/timeouts
  set timeout 15
@@ -29,7 +29,7 @@
 
 # Log output
 # log_file -a $logfile # -a is for append
-  log_file $logfile
+ log_file $logfile
 
 # Log results - create or truncate a file
 # more i/o in main loop
@@ -68,7 +68,7 @@
          "Username:" { send "$username\r"; expect "*assword:"; send "$password\r"}
  }
 
-# If we're not already in enable mode, get us there
+# Get into enable mode
  expect {
          default { send_user "\nEnable Mode Failed - Check Password\n"; puts $results "\n ** Enable mode on ($hostname) failed! Check password! **\n"; continue }
          "*#"    {}
@@ -81,7 +81,7 @@
                     # puts out0:$expect_out(0,string)
                     # the subexpression () is in:
                     set hostshort $expect_out(1,string)
-                    }
+                 }
          }
  }
 
@@ -92,18 +92,17 @@
  send "term len 0 \r" ; expect "^*#"
  send "sh voice port summary | i voice \r"
  expect -re {(.*)#} {
-		             set voiceports $expect_out(1,string)
+		     set voiceports $expect_out(1,string)
                      puts $results $voiceports
-		            }
+		    }
 
  send "sh run | s call-manager\r"
  expect -re {(.*)#} {
                      set fallback $expect_out(1,string)
                      puts $results $fallback
-		            }
+		    }
 
  send "quit \r"
-
 
  send_user "\n\n ##### SSH and config on $hostshort ($hostname) works OK! #####\n\n"
  puts $results "\n ##### SSH and config on $hostshort ($hostname) works OK! #####\n"
