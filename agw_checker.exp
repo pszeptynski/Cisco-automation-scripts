@@ -17,7 +17,7 @@
  set enablepassword ENA_PASSWORD
  set device_list "devices.txt"
  set results_file "results.txt"
- set logfile = "output.log"
+ set logfile "output.log"
 
 # Tune timeout value if have connection problems/timeouts
  set timeout 15
