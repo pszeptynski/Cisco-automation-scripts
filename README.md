@@ -1,2 +1,3 @@
 # Cisco-automation-scripts
-Simple automation scripts for many Cisco devices written in TCL/Expect
+Simple automation scripts for sending multiple commands to many Cisco devices written in TCL/Expect.
+
