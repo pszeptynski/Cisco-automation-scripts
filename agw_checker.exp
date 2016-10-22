@@ -67,7 +67,7 @@
          "Username:" { send "$username\r"; expect "*assword:"; send "$password\r"}
  }
 
-# If we're not already in enable mode, get us there
+# Get into enable mode
  expect {
          default { send_user "\nEnable Mode Failed - Check Password\n"; puts $results "\n ** Enable mode on ($hostname) failed! Check password! **\n"; continue }
          "*#"    {}
@@ -80,7 +80,7 @@
                     # puts out0:$expect_out(0,string)
                     # the subexpression () is in:
                     set hostshort $expect_out(1,string)
-                    }
+                 }
          }
  }
 
@@ -91,6 +91,7 @@
  send "sh clock\r"
  expect "*#"
  send "quit \r"
+ 
  send_user "\n\n ##### Telnet on $hostshort ($hostname) works OK! #####\n\n"
  puts $results "\n ##### Telnet on $hostshort ($hostname) works OK! #####\n"
  close $results
